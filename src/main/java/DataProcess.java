@@ -1,5 +1,4 @@
-import java.io.BufferedWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,8 +27,12 @@ public class DataProcess {
 
     private static final Comparator<Count> HITS = Comparator.comparingInt(o -> o.count);
 
-    public static void process(Path inputPath, Path outputPath, int interval) {
-        List<Count> result = readFile(inputPath, interval * 60);
+    public static void process(Path inputPath, Path outputPath, int interval, boolean readMode) {
+        List<Count> result;
+        if (readMode)
+            result = readFile(inputPath, interval * 60);
+        else
+            result = plainReadFile(inputPath, interval);
         List<Count> ordered = result.stream().sorted(ORDERED).collect(Collectors.toList());
         List<Count> hits = result.stream().sorted(HITS).collect(Collectors.toList());
         output(outputPath, ordered, hits);
@@ -47,7 +50,22 @@ public class DataProcess {
         return Collections.EMPTY_LIST;
     }
 
-    public static void processLine(String line, ConcurrentHashMap<Long, Integer> map, int interval) {
+    public static List<Count> plainReadFile(Path path, int interval) {
+        HashMap<Long, Integer> result = new HashMap();
+        File file = new File(path.toUri());
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            System.out.println("read file");
+            for (String line; (line = br.readLine()) != null; ) {
+                processLine(line, result, interval);
+            }
+            return result.entrySet().stream().map(entry -> new Count(entry.getKey(), entry.getValue())).collect(Collectors.toList());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return Collections.EMPTY_LIST;
+    }
+
+    public static void processLine(String line, Map<Long, Integer> map, int interval) {
         long offset = parseLine(line);
         if (interval > 0)
             offset = offset / interval;

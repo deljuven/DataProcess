@@ -11,6 +11,9 @@ public class Main {
             int interval = -1;
             if (args.length > 2)
                 interval = Integer.valueOf(args[2]);
+            boolean readMode = false;
+            if (args.length > 3)
+                readMode = Boolean.valueOf(args[3]);
             long begin = System.currentTimeMillis();
             Path path = Paths.get(inPath);
             if (Files.exists(path)) {
@@ -20,7 +23,7 @@ public class Main {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                DataProcess.process(path, Paths.get(outPath), interval);
+                DataProcess.process(path, Paths.get(outPath), interval, readMode);
             } else {
                 System.out.println("File not existed");
             }
