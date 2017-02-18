@@ -37,7 +37,7 @@ public class DataProcess {
 
     public static List<Count> readFile(String path, int interval) {
         ConcurrentHashMap<Long, Integer> result = new ConcurrentHashMap();
-        try (Stream<String> stream = Files.lines(Paths.get(path))) {
+        try (Stream<String> stream = Files.lines(Files.readSymbolicLink(Paths.get(path)))) {
             stream.forEach(line -> processLine(line, result, interval));
             return result.entrySet().stream().map(entry -> new Count(entry.getKey(), entry.getValue())).collect(Collectors.toList());
         } catch (IOException e) {
