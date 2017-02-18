@@ -28,16 +28,17 @@ public class DataProcess {
 
     private static final Comparator<Count> HITS = Comparator.comparingInt(o -> o.count);
 
-    public static void process(String inputPath, String outputPath, int interval) {
+    public static void process(Path inputPath, Path outputPath, int interval) {
         List<Count> result = readFile(inputPath, interval * 60);
         List<Count> ordered = result.stream().sorted(ORDERED).collect(Collectors.toList());
         List<Count> hits = result.stream().sorted(HITS).collect(Collectors.toList());
         output(outputPath, ordered, hits);
     }
 
-    public static List<Count> readFile(String path, int interval) {
+    public static List<Count> readFile(Path path, int interval) {
         ConcurrentHashMap<Long, Integer> result = new ConcurrentHashMap();
-        try (Stream<String> stream = Files.lines(Files.readSymbolicLink(Paths.get(path)))) {
+        try (Stream<String> stream = Files.lines(path)) {
+            System.out.println("read file");
             stream.forEach(line -> processLine(line, result, interval));
             return result.entrySet().stream().map(entry -> new Count(entry.getKey(), entry.getValue())).collect(Collectors.toList());
         } catch (IOException e) {
@@ -75,10 +76,9 @@ public class DataProcess {
         return null;
     }
 
-    private static void output(String outPath, List<Count> ordered, List<Count> hits) {
-        Path path = Paths.get(outPath);
-        writeFile(path, ordered);
-        path = Paths.get(outPath + ".hit");
+    private static void output(Path outPath, List<Count> ordered, List<Count> hits) {
+        writeFile(outPath, ordered);
+        Path path = Paths.get(outPath + ".hit");
         writeFile(path, hits);
     }
 

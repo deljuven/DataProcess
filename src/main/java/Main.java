@@ -1,4 +1,6 @@
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Main {
@@ -10,8 +12,18 @@ public class Main {
             if (args.length > 2)
                 interval = Integer.valueOf(args[2]);
             long begin = System.currentTimeMillis();
-            if (Files.exists(Paths.get(inPath)))
-                DataProcess.process(inPath, outPath, interval);
+            Path path = Paths.get(inPath);
+            if (Files.exists(path)) {
+                if (Files.isSymbolicLink(path))
+                    try {
+                        path = Files.readSymbolicLink(path);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                DataProcess.process(path, Paths.get(outPath), interval);
+            } else {
+                System.out.println("File not existed");
+            }
             System.out.println(System.currentTimeMillis() - begin);
         } else
             System.out.println("No input file defined");
