@@ -28,8 +28,6 @@ public class DataProcess {
 
     private static final Comparator<Count> HITS = Comparator.comparingInt(o -> o.count);
 
-    private static int no = 0;
-
     public static void process(Path inputPath, Path outputPath, int interval) {
         List<Count> result = readFile(inputPath, interval * 60);
         List<Count> ordered = result.stream().sorted(ORDERED).collect(Collectors.toList());
@@ -39,7 +37,7 @@ public class DataProcess {
 
     public static List<Count> readFile(Path path, int interval) {
         ConcurrentHashMap<Long, Integer> result = new ConcurrentHashMap();
-        try (Stream<String> stream = Files.lines(path)) {
+        try (Stream<String> stream = Files.lines(path, StandardCharsets.US_ASCII)) {
             System.out.println("read file");
             stream.forEach(line -> processLine(line, result, interval));
             return result.entrySet().stream().map(entry -> new Count(entry.getKey(), entry.getValue())).collect(Collectors.toList());
@@ -50,7 +48,6 @@ public class DataProcess {
     }
 
     public static void processLine(String line, ConcurrentHashMap<Long, Integer> map, int interval) {
-        System.out.println(++no);
         long offset = parseLine(line);
         if (interval > 0)
             offset = offset / interval;
